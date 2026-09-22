@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArogyaEdge Lab – Advanced Digital Prototype | SIH 2026</title>
+<style>
+:root {
+  --bg:#e8eef4; --surface:#fff; --elev:#f3f6fa; --border:#cfd8e3;
+  --text:#15202b; --muted:#5a6b7d; --subtle:#8b98a8;
+  --accent:#00a896; --accent2:#0d9488; --accent-dim:rgba(0,168,150,.12);
+  --orange:#e67e22; --red:#e74c3c; --green:#27ae60; --blue:#2980b9; --purple:#8e44ad;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;height:100dvh}
+.topbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px 0 20px;box-shadow:0 1px 4px rgba(0,0,0,.05);z-index:40}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px}
+.logo .brand{color:var(--accent)}.logo .sub{color:var(--muted);font-weight:400;font-size:13px}
+.top-right{font-size:11px;color:var(--subtle);display:flex;align-items:center;gap:12px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(39,174,96,.5);animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(39,174,96,.5)}70%{box-shadow:0 0 0 8px rgba(39,174,96,0)}100%{box-shadow:0 0 0 0 rgba(39,174,96,0)}}
+.main{display:grid;grid-template-rows:minmax(300px,48vh) 1fr;height:calc(100vh - 48px);height:calc(100dvh - 48px)}
+@media(min-width:960px){.main{grid-template-rows:none;grid-template-columns:1fr minmax(340px,420px)}}
+#canvas-wrap{position:relative;background:linear-gradient(160deg,#eef3f8 0%,#d8e2ee 55%,#c9d6e6 100%);min-height:300px}
+canvas{display:block;width:100%;height:100%}
+.canvas-hint{position:absolute;top:12px;left:14px;font-size:11px;color:var(--muted);pointer-events:none;background:rgba(255,255,255,.85);padding:6px 12px;border-radius:8px;border:1px solid var(--border);max-width:220px;line-height:1.4;backdrop-filter:blur(6px)}
+.canvas-controls{position:absolute;top:12px;right:12px;display:flex;gap:8px;z-index:15;flex-wrap:wrap;justify-content:flex-end}
+.canvas-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.06);transition:.15s}
+.canvas-btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.canvas-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.comp-card{position:absolute;bottom:16px;left:16px;background:rgba(255,255,255,.95);border:1px solid var(--border);border-radius:12px;padding:12px 14px;max-width:260px;box-shadow:0 8px 28px rgba(0,0,0,.12);z-index:20;backdrop-filter:blur(10px);display:none;animation:fadeUp .25s ease}
+.comp-card.show{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.comp-card h4{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:4px}
+.comp-card p{font-size:11px;color:var(--muted);line-height:1.45}
+.comp-card .tag{display:inline-block;font-size:10px;background:var(--accent-dim);color:var(--accent2);padding:2px 7px;border-radius:99px;margin-top:6px;font-weight:600}
+.console{background:var(--surface);border-top:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+@media(min-width:960px){.console{border-top:none;border-left:1px solid var(--border)}}
+.console-header{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.console-header h2{font-size:16px;font-weight:700}
+.console-header p{font-size:11px;color:var(--muted)}
+.tabs{display:flex;gap:4px;background:var(--elev);padding:3px;border-radius:8px;border:1px solid var(--border)}
+.tab{padding:5px 10px;font-size:11px;font-weight:600;border:none;background:transparent;color:var(--muted);border-radius:6px;cursor:pointer}
+.tab.active{background:var(--accent);color:#fff}
+.console-body{flex:1;overflow-y:auto;padding:12px 16px 18px;display:flex;flex-direction:column;gap:12px}
+.panel{display:none}.panel.active{display:flex;flex-direction:column;gap:12px}
+.section-title{font-size:10px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.mode-row{display:flex;background:var(--elev);border-radius:8px;padding:3px;border:1px solid var(--border)}
+.mode-btn{flex:1;padding:8px 4px;border:none;background:transparent;color:var(--muted);border-radius:6px;cursor:pointer;font-size:11px;font-weight:600}
+.mode-btn.active{background:var(--accent);color:#fff}
+.scenario-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.scenario-btn{background:var(--elev);border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;text-align:left;transition:.15s;position:relative;overflow:hidden}
+.scenario-btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.scenario-btn.active{border-color:var(--accent);background:var(--accent-dim)}
+.scenario-btn .name{font-size:12px;font-weight:700}
+.scenario-btn .desc{font-size:10px;color:var(--muted);margin-top:2px}
+.scenario-btn .ico{position:absolute;right:8px;top:8px;font-size:16px;opacity:.35}
+.tele-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tele-card{background:var(--elev);border-radius:10px;padding:10px 11px;border:1px solid var(--border);position:relative}
+.tele-label{font-size:10px;color:var(--muted);margin-bottom:2px}
+.tele-value{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.tele-unit{font-size:11px;color:var(--muted);margin-left:2px}
+.spark{position:absolute;right:8px;bottom:8px;width:48px;height:18px}
+.risk-box{background:var(--elev);border-radius:12px;padding:12px;border:1px solid var(--border)}
+.risk-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.risk-gauge{height:10px;background:#dce3eb;border-radius:6px;overflow:hidden;position:relative}
+.risk-fill{height:100%;border-radius:6px;transition:width .5s ease,background .4s;position:relative}
+.risk-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:shimmer 2s infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.risk-meta{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)}
+.battery-row{display:flex;align-items:center;gap:10px;background:var(--elev);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.bat-icon{width:28px;height:14px;border:2px solid var(--muted);border-radius:3px;position:relative;flex-shrink:0}
+.bat-icon::after{content:'';position:absolute;right:-5px;top:2px;width:3px;height:6px;background:var(--muted);border-radius:0 2px 2px 0}
+.bat-level{height:100%;background:var(--green);border-radius:1px;transition:width .4s}
+.bat-text{font-size:12px;font-weight:600}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.btn{padding:10px;border-radius:9px;border:1px solid var(--border);background:var(--elev);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:5px}
+.btn:hover{border-color:var(--accent);background:#eef2f6}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{border-color:rgba(231,76,60,.4)}.btn.danger:hover{border-color:var(--red);background:rgba(231,76,60,.08)}
+.btn.warning{border-color:rgba(230,126,34,.4)}.btn.warning:hover{border-color:var(--orange);background:rgba(230,126,34,.08)}
+.btn:active{transform:scale(.97)}
+.comp-list{display:flex;flex-direction:column;gap:5px}
+.comp-item{display:flex;align-items:center;gap:10px;padding:9px 11px;background:var(--elev);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:.15s;text-align:left;width:100%;font:inherit;color:inherit}
+.comp-item:hover,.comp-item.active{border-color:var(--accent);background:var(--accent-dim)}
+.comp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.comp-item .cname{font-size:12px;font-weight:600}.comp-item .cdesc{font-size:10px;color:var(--muted)}
+.log{max-height:130px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.log-item{padding:8px 10px;border-radius:8px;background:var(--elev);border:1px solid var(--border);border-left:3px solid var(--accent);display:flex;justify-content:space-between;gap:8px;font-size:11px;line-height:1.35;animation:fadeUp .2s ease}
+.log-item.heat{border-left-color:var(--orange)}.log-item.fall{border-left-color:var(--red)}.log-item.info{border-left-color:var(--blue)}.log-item.ok{border-left-color:var(--green)}
+.log-time{color:var(--subtle);white-space:nowrap;flex-shrink:0}
+.privacy{background:var(--accent-dim);border:1px solid rgba(0,168,150,.28);border-radius:10px;padding:11px 13px;font-size:11px;line-height:1.45}
+.privacy strong{color:var(--accent)}
+.pipeline{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.pipe-step{font-size:10px;font-weight:600;padding:4px 8px;border-radius:99px;background:var(--elev);border:1px solid var(--border);color:var(--muted)}
+.pipe-step.on{background:var(--accent-dim);border-color:var(--accent);color:var(--accent2)}
+.pipe-step.alert{background:rgba(231,76,60,.12);border-color:var(--red);color:var(--red)}
+.pipe-arrow{color:var(--subtle);font-size:10px}
+.intro-overlay{position:fixed;inset:0;background:rgba(20,28,40,.55);z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:16px;backdrop-filter:blur(5px)}
+@media(min-width:640px){.intro-overlay{align-items:center}}
+.intro-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:500px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.18)}
+.intro-label{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-weight:600}
+.intro-card h1{font-size:28px;font-weight:700;margin-top:6px;letter-spacing:-.03em}
+.intro-card .lead{margin-top:10px;font-size:14px;color:var(--muted);line-height:1.5}
+.intro-list{margin-top:16px;list-style:none;display:flex;flex-direction:column;gap:8px}
+.intro-list li{font-size:13px;padding-left:18px;position:relative;line-height:1.4}
+.intro-list li::before{content:"▸";position:absolute;left:0;color:var(--accent);font-size:11px}
+.intro-note{margin-top:14px;font-size:11px;color:var(--subtle);line-height:1.45}
+.intro-btn{margin-top:18px;width:100%;padding:13px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer}
+.intro-btn:hover{filter:brightness(1.06)}
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:14px}
+#loading .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.alert-banner{position:absolute;top:56px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;padding:8px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:25;box-shadow:0 6px 20px rgba(231,76,60,.4);display:none;animation:fadeUp .3s ease;white-space:nowrap}
+.alert-banner.show{display:block}
+.alert-banner.heat{background:var(--orange);box-shadow:0 6px 20px rgba(230,126,34,.4)}
+</style>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div><div style="color:var(--accent);font-size:14px;font-weight:500">Loading advanced lab…</div></div>
+<div class="intro-overlay" id="intro">
+  <div class="intro-card">
+    <p class="intro-label">SIH 2026 · Hardware · Digital Prototype</p>
+    <h1>ArogyaEdge Lab</h1>
+    <p class="lead">Interactive simulation of the Edge-AI wearable. Orbit the band, explode components, run heat/fall scenarios, and inspect real parts.</p>
+    <ul class="intro-list">
+      <li>Click any component in cutaway for specs</li>
+      <li>Live telemetry with mini sparklines</li>
+      <li>Signal pipeline: Sensors → TinyML → Risk → Alert</li>
+      <li>Mode A offline · Mode B hybrid · haptic feedback</li>
+    </ul>
+    <p class="intro-note">Simulation only. Not a medical device. AI designed for ESP32-S3 on-device inference.</p>
+    <button class="intro-btn" id="enter-lab">Enter the advanced lab</button>
+  </div>
+</div>
+<div class="topbar">
+  <div class="logo"><span class="brand">ArogyaEdge</span><span class="sub">• Advanced Prototype Lab</span></div>
+  <div class="top-right"><span class="live-dot"></span> Simulation live · SIH 2026</div>
+</div>
+<div class="main">
+  <div id="canvas-wrap">
+    <div class="canvas-hint">Orbit · Zoom · Cutaway · Click parts for details</div>
+    <div class="canvas-controls">
+      <button class="canvas-btn" id="btn-cutaway">Cutaway</button>
+      <button class="canvas-btn" id="btn-spin">Auto-spin</button>
+    </div>
+    <div class="alert-banner" id="alert-banner"></div>
+    <div class="comp-card" id="comp-card">
+      <h4 id="comp-title">—</h4>
+      <p id="comp-desc">—</p>
+      <span class="tag" id="comp-tag">Component</span>
+    </div>
+  </div>
+  <aside class="console">
+    <div class="console-header">
+      <div><h2>Process Console</h2><p>Telemetry · AI pipeline · components</p></div>
+      <div class="tabs">
+        <button class="tab active" data-tab="demo">Demo</button>
+        <button class="tab" data-tab="parts">Parts</button>
+        <button class="tab" data-tab="ai">AI Flow</button>
+      </div>
+    </div>
+    <div class="console-body">
+      <div class="panel active" id="panel-demo">
+        <div>
+          <div class="section-title">Operating Mode</div>
+          <div class="mode-row">
+            <button class="mode-btn active" id="modeA">Mode A · On-Band</button>
+            <button class="mode-btn" id="modeB">Mode B · Hybrid</button>
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Demo Scenarios</div>
+          <div class="scenario-grid">
+            <button class="scenario-btn active" data-scenario="normal"><span class="ico">✓</span><div class="name">Normal</div><div class="desc">Healthy baseline</div></button>
+            <button class="scenario-btn" data-scenario="heat"><span class="ico">🌡</span><div class="name">Heat Wave</div><div class="desc">Outdoor worker</div></button>
+            <button class="scenario-btn" data-scenario="fall"><span class="ico">↓</span><div class="name">Fall Event</div><div class="desc">Elderly user</div></button>
+            <button class="scenario-btn" data-scenario="dehydrate"><span class="ico">💧</span><div class="name">Dehydration</div><div class="desc">High activity</div></button>
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Live Telemetry</div>
+          <div class="tele-grid">
+            <div class="tele-card"><div class="tele-label">Heart Rate</div><div><span class="tele-value" id="t-hr">78</span><span class="tele-unit">bpm</span></div><canvas class="spark" id="spark-hr" width="96" height="36"></canvas></div>
+            <div class="tele-card"><div class="tele-label">SpO₂</div><div><span class="tele-value" id="t-spo2">98</span><span class="tele-unit">%</span></div><canvas class="spark" id="spark-spo2" width="96" height="36"></canvas></div>
+            <div class="tele-card"><div class="tele-label">Skin Temp</div><div><span class="tele-value" id="t-temp">34.1</span><span class="tele-unit">°C</span></div></div>
+            <div class="tele-card"><div class="tele-label">Ambient</div><div><span class="tele-value" id="t-amb">32.4</span><span class="tele-unit">°C</span></div></div>
+          </div>
+          <div class="risk-box" style="margin-top:8px">
+            <div class="risk-header"><span style="font-size:12px;font-weight:600">Risk Score</span><span id="t-risk" style="font-size:18px;font-weight:700;color:var(--green)">12</span></div>
+            <div class="risk-gauge"><div class="risk-fill" id="risk-fill" style="width:12%;background:var(--green)"></div></div>
+            <div class="risk-meta"><span id="risk-label">LOW RISK</span><span id="risk-hint">Within personal baseline</span></div>
+          </div>
+        </div>
+        <div class="battery-row">
+          <div class="bat-icon"><div class="bat-level" id="bat-level" style="width:87%"></div></div>
+          <div><div class="bat-text" id="bat-text">87% · ~18 h remaining</div><div style="font-size:10px;color:var(--muted)">400–600 mAh Li-Po · continuous sensing</div></div>
+        </div>
+        <div>
+          <div class="section-title">Actions</div>
+          <div class="btn-row">
+            <button class="btn primary" id="btn-start">▶ Start Monitoring</button>
+            <button class="btn" id="btn-reset">↺ Reset</button>
+          </div>
+          <div class="btn-row" style="margin-top:6px">
+            <button class="btn warning" id="btn-heat">🌡 Trigger Heat</button>
+            <button class="btn danger" id="btn-fall">📉 Trigger Fall</button>
+          </div>
+          <div class="btn-row" style="margin-top:6px">
+            <button class="btn" id="btn-offline">📶 Go Offline</button>
+            <button class="btn" id="btn-vibrate">📳 Haptic Test</button>
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Event Log</div>
+          <div class="log" id="event-log"><div class="log-item info"><span>Advanced lab ready</span><span class="log-time">now</span></div></div>
+        </div>
+        <div class="privacy"><strong>Privacy First · Edge AI</strong><br>All inference on ESP32-S3. No raw data leaves the band without consent. Fully offline in Mode A.</div>
+      </div>
+      <div class="panel" id="panel-parts">
+        <div class="section-title">Click a part · also works in cutaway</div>
+        <div class="comp-list" id="comp-list"></div>
+        <div class="privacy" style="margin-top:8px"><strong>BOM target</strong><br>Prototype cost ₹900–1,600 · 9 core off-the-shelf parts · student-buildable in India.</div>
+      </div>
+      <div class="panel" id="panel-ai">
+        <div class="section-title">On-device signal pipeline</div>
+        <div class="pipeline" id="pipeline">
+          <span class="pipe-step on">Sensors</span><span class="pipe-arrow">→</span>
+          <span class="pipe-step on">Preprocess</span><span class="pipe-arrow">→</span>
+          <span class="pipe-step on">TinyML</span><span class="pipe-arrow">→</span>
+          <span class="pipe-step on">Risk</span><span class="pipe-arrow">→</span>
+          <span class="pipe-step" id="pipe-alert">Alert</span>
+        </div>
+        <div style="background:var(--elev);border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:4px">
+          <div style="font-size:12px;font-weight:700;margin-bottom:8px">Models on ESP32-S3</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:6px"><strong style="color:var(--text)">1. Heat stress</strong> — skin + ambient + humidity + HR rise · <50 KB</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:6px"><strong style="color:var(--text)">2. Fall detection</strong> — MPU6050 TinyML · quantized · real-time</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5"><strong style="color:var(--text)">3. Anomaly checks</strong> — SpO₂ drop · unusual activity patterns</div>
+        </div>
+        <div style="background:var(--elev);border:1px solid var(--border);border-radius:12px;padding:12px">
+          <div style="font-size:12px;font-weight:700;margin-bottom:6px">Tools</div>
+          <div style="font-size:11px;color:var(--muted)">Edge Impulse or TensorFlow Lite Micro · models under 50 KB · run in real time on-band</div>
+        </div>
+        <div class="privacy"><strong>Why Edge?</strong><br>Works with zero internet · low latency · privacy by design · resilient in disasters & rural areas.</div>
+      </div>
+    </div>
+  </aside>
+</div>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
